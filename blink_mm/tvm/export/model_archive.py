@@ -149,26 +149,14 @@ def amm_vit(ckpt_path=None):
     # model = pl_model.model
     # torch.save(model, "amm_vit_082.pth")
     model = torch.load("amm_vit_082.pth", map_location="cpu")
-    # print(model)
-    # exit()
-    # # if ckpt_path is not None:
-    #     ckpt = torch.load(ckpt_path, map_location="cpu")
-    #     model.load_state_dict(ckpt)
     
-    # 出來的格式要是torch script可以用的。。。
     return model
 def vit(ckpt_path=None): 
     # pl_model = LUT_DeiT().load_from_checkpoint("/home/yllab/JiaXing/Research/epoch=1-step=98.ckpt")
     # model = pl_model.model
     # torch.save(model, "amm_vit_082.pth")
     model = create_model(model_name="deit3_small_patch16_224.fb_in22k_ft_in1k", pretrained=True)
-    # print(model)
-    # exit()
-    # # if ckpt_path is not None:
-    #     ckpt = torch.load(ckpt_path, map_location="cpu")
-    #     model.load_state_dict(ckpt)
     
-    # 出來的格式要是torch script可以用的。。。
     return model
 
 # bert

@@ -49,7 +49,7 @@ __all__ = ['VisionTransformer']  # model_registry will add each entrypoint fn to
 
 
 _logger = logging.getLogger(__name__)
-import torchsnooper
+# import torchsnooper
 
 class AttnScore(nn.Module):
     def __init__(self, scale, attn_drop):

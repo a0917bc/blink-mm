@@ -35,7 +35,7 @@ def tuning_main(
     tuner, host, port, key, tuning_records
 ):
     os.environ["TVM_NUM_THREADS"] = str(num_threads)
-
+    use_android = False
     model_info = MODEL_ARCHIVE[model]
 
     model = model_info["model"]()
@@ -51,6 +51,8 @@ def tuning_main(
         (i.debugName().split('.')[0], i.type().sizes())
         for i in list(scripted_model.graph.inputs())[1:]
     ]
+    # print(scripted_model)
+    # exit()
     custom_map = {"prim::PythonOp": amm_op_impl}
     mod, params = relay.frontend.from_pytorch(
         scripted_model, input_infos, custom_convert_map=custom_map)
@@ -77,12 +79,14 @@ def tuning_main(
             runner = meta_schedule.runner.LocalRunner()
             target += f" -num-cores={num_threads}"
     elif tgt == "arm":
-        target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
+        target = "llvm -mcpu=apple-m1 -mtriple=arm64-apple-darwin22.6.0"
         if tuner == "autotvm":
             measure_option = autotvm.measure_option(
-                builder=autotvm.LocalBuilder(build_func="ndk", timeout=60),
+                builder=autotvm.LocalBuilder(build_func="ndk" if use_android else "default", timeout=60),
                 runner=autotvm.RPCRunner(
-                    key, host, port)
+                    key, 
+                    host, 
+                    port)
             )
         elif tuner == "auto_scheduler":
             builder = auto_scheduler.LocalBuilder(build_func="ndk", timeout=60)
@@ -149,7 +153,7 @@ if __name__ == "__main__":
                         choices=["x86", "x86_avx512", "arm"])
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=9190, type=int)
-    parser.add_argument("--key", default="pixel4")
+    parser.add_argument("--key", default="m1")
     args = parser.parse_args()
 
     tuning_main(args.num_threads, args.model, args.quantize, args.target,

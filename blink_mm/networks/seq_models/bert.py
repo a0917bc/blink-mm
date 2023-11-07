@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from transformers import AutoModelForSequenceClassification
+# from transformers import AutoModelForSequenceClassification
 
 
 class BERT(nn.Module):

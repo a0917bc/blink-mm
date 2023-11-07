@@ -26,9 +26,10 @@ def tune_network(mod, params, target, tuning_option):
 
     tasks = autotvm.task.extract_from_program(
         mod["main"], target=target, params=params)
-
+    # print(mod["main"])
+    # exit()
     for i, task in enumerate(tasks):
-        prefix = "[Task %2d/%2d: %s] " % (i + 1, len(tasks), task.name)
+        prefix = "[Task %2d/%2d: %s] " % (i + 1, len(tasks), task.name) # Just task.name for x86?
         tuner = XGBTuner(task, loss_type="rank", feature_type="curve")
         tuner.tune(
             n_trial=min(tuning_option["n_trial"], len(task.config_space)),

@@ -1,14 +1,19 @@
+# pylint: disable=C0301,W0621,C0103,C0209,C0116
+"""
+
+Author: Jia-Xing
+Date: 2023-10-30
+"""
 import os
 import argparse
 
 import torch
 import torch.utils.dlpack
 
-import tvm
-from tvm import autotvm, auto_scheduler, meta_schedule
-import tvm.relay
+from qat.export.export import _get_model_to_export, export
 
-from qat.export.export import _get_model_to_export
+import tvm
+from tvm import autotvm, auto_scheduler, meta_schedule, relay
 
 from blink_mm.tvm.export.utils import (
     quantize,
@@ -47,7 +52,7 @@ def tuning_main(
         for i in list(scripted_model.graph.inputs())[1:]
     ]
     custom_map = {"prim::PythonOp": amm_op_impl}
-    mod, params = tvm.relay.frontend.from_pytorch(
+    mod, params = relay.frontend.from_pytorch(
         scripted_model, input_infos, custom_convert_map=custom_map)
 
     if quantize_flag:
@@ -57,7 +62,7 @@ def tuning_main(
         if tgt == "x86":
             target = "llvm -mcpu=core-avx2"
         elif tgt == "x86_avx512":
-            target = "llvm -mcpu=cascadelake"
+            target = "llvm -mcpu=skylake-avx512"
         if tuner == "autotvm":
             measure_option = autotvm.measure_option(
                 builder="local", runner="local"
@@ -91,7 +96,7 @@ def tuning_main(
             )
         elif tuner == "meta_schedule":
             builder = meta_schedule.builder.LocalBuilder(
-                build_func="ndk", timeout=60)
+                build_func="ndk", timeout_sec=60) 
             runner = meta_schedule.runner.RPCRunner(rpc_config=meta_schedule.runner.config.RPCConfig(
                 tracker_host=host,
                 tracker_port=port,
@@ -134,13 +139,13 @@ def tuning_main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
-    parser.add_argument("--model", default="resnet18")
+    parser.add_argument("--model", default="amm_vit") #  amm_bert_last_6_layers
     parser.add_argument("--tuning-records", default="resnet18.json")
     parser.add_argument("--num-threads", default=1, type=int)
     parser.add_argument("--tuner", default="autotvm",
                         choices=["autotvm", "auto_scheduler", "meta_schedule"])
     parser.add_argument("--quantize", action="store_true")
-    parser.add_argument("--target", default="x86",
+    parser.add_argument("--target", default="x86_avx512",
                         choices=["x86", "x86_avx512", "arm"])
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=9190, type=int)

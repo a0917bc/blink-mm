@@ -63,11 +63,11 @@ class AMMLinear(nn.Module):
         # (ncodebooks, b, k)
         lut = torch.bmm(self.centroids, self.weight)
         # (ncodebooks, k, out_features)
-        real_output = torch.bmm(attention, lut).sum(0)
+        real_output = torch.bmm(attention, lut).sum(dim=0)
 
-        one_hot = F.one_hot(dist.argmin(dim=-1), num_classes=self.k).float()
+        one_hot = F.one_hot(dist.argmin(dim=-1), num_classes=self.k).float() # encodings, how to 蒐集?
         quantized_output = torch.bmm(
-            one_hot, quantized_lut.dequantize()).sum(0)
+            one_hot, quantized_lut.dequantize()).sum(dim=0)
         output = real_output - (real_output - quantized_output).detach()
         # (b, out_features)
         if self.bias is not None:

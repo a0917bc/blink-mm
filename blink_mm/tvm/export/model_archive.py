@@ -1,7 +1,8 @@
+# pylint: disable=C0301,W0621,C0103,C0209,C0116,C0114,C0115,C0415
 import torch.nn as nn
 import torch
 import torchvision
-
+from timm import create_model
 from qat.networks.cnn_wrapper import CNNWrapper
 
 import blink_mm.networks.resnet_large_cifar.resnet as resnet_large_cifar_resnet
@@ -20,6 +21,7 @@ import blink_mm.networks.senet_imagenet.amm_senet as senet_imagenet_amm_senet
 from blink_mm.networks.seq_models.bert import BERT
 from blink_mm.networks.seq_models.amm_bert import AMMBERT
 
+from blink_mm.networks.LUTDeiT import LUT_DeiT
 
 # CIFAR10 models
 
@@ -132,13 +134,41 @@ def senet18(ckpt_path=None):
     return model
 
 
-def amm_senet18(ckpt_path=None):
+def amm_senet18(ckpt_path=None): 
     model = senet_imagenet_amm_senet.amm_senet18()
     model = CNNWrapper(model, "cpu")
     model.eval()
     if ckpt_path is not None:
         ckpt = torch.load(ckpt_path, map_location="cpu")
         model.load_state_dict(ckpt)
+    return model
+
+
+def amm_vit(ckpt_path=None): 
+    # pl_model = LUT_DeiT().load_from_checkpoint("/home/yllab/JiaXing/Research/epoch=1-step=98.ckpt")
+    # model = pl_model.model
+    # torch.save(model, "amm_vit_082.pth")
+    model = torch.load("amm_vit_082.pth", map_location="cpu")
+    # print(model)
+    # exit()
+    # # if ckpt_path is not None:
+    #     ckpt = torch.load(ckpt_path, map_location="cpu")
+    #     model.load_state_dict(ckpt)
+    
+    # 出來的格式要是torch script可以用的。。。
+    return model
+def vit(ckpt_path=None): 
+    # pl_model = LUT_DeiT().load_from_checkpoint("/home/yllab/JiaXing/Research/epoch=1-step=98.ckpt")
+    # model = pl_model.model
+    # torch.save(model, "amm_vit_082.pth")
+    model = create_model(model_name="deit3_small_patch16_224.fb_in22k_ft_in1k", pretrained=True)
+    # print(model)
+    # exit()
+    # # if ckpt_path is not None:
+    #     ckpt = torch.load(ckpt_path, map_location="cpu")
+    #     model.load_state_dict(ckpt)
+    
+    # 出來的格式要是torch script可以用的。。。
     return model
 
 # bert
@@ -241,6 +271,14 @@ MODEL_ARCHIVE = {
     "amm_senet18": {
         "model": amm_senet18,
         "input": (torch.randn(1, 3, 224, 224),),
+    },
+    "amm_vit": {
+        "model": amm_vit,
+        "input": (torch.randn(16, 3, 224, 224),),#torch.randn(1, 3, 224, 224)
+    },
+    "vit": {
+        "model": vit,
+        "input": (torch.randn(16, 3, 224, 224),),#torch.randn(1, 3, 224, 224)
     },
 
     # BERT

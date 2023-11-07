@@ -3,3 +3,14 @@ datasets
 build
 amlt_configs
 ae-output
+1106_1
+*.json
+1107
+*.so
+*.log
+*.txt
+*.pth
+*.ipynb
+myscripts/
+*tsv
+*csv

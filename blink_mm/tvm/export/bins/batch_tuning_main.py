@@ -9,7 +9,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
     parser.add_argument("--num-threads", default=1, type=int)
     parser.add_argument("--tuning-records")
-    parser.add_argument("--target", default="arm",
+    parser.add_argument("--target", default="x86_avx512",
                         choices=["arm", "x86", "x86_avx512"])
     parser.add_argument("--dev-name")
     parser.add_argument("--host", default="127.0.0.1")

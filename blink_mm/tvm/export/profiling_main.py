@@ -68,7 +68,8 @@ def profiling_main(
     if tgt == "x86":
         target = "llvm -mcpu=core-avx2"
     elif tgt == "x86_avx512":
-        target = "llvm -mcpu=cascadelake"
+        # target = "llvm -mcpu=cascadelake"
+        target = "llvm -mcpu=skylake-avx512"
     elif tgt == "arm":
         target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
     if tuner == "meta_schedule":
@@ -161,7 +162,7 @@ def profiling_main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
-    parser.add_argument("--model", default="amm_resnet18")
+    parser.add_argument("--model", default="amm_vit")
     parser.add_argument("--report", default="report.csv")
     parser.add_argument("--num-threads", default=1, type=int)
     parser.add_argument("--ckpt-path", nargs="?")
@@ -169,7 +170,7 @@ if __name__ == "__main__":
                         choices=["autotvm", "auto_scheduler", "meta_schedule"])
     parser.add_argument("--quantize", action="store_true")
     parser.add_argument("--tuning-records", nargs='?')
-    parser.add_argument("--target", default="arm",
+    parser.add_argument("--target", default="x86_avx512",
                         choices=["arm", "x86", "x86_avx512"])
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=9190, type=int)
@@ -179,7 +180,7 @@ if __name__ == "__main__":
     parser.add_argument("--bin-path", nargs="?")
 
     args = parser.parse_args()
-
+    args.bin_path = args.model + ".so"
     profiling_main(
         args.num_threads, args.model, args.ckpt_path, args.quantize,
         args.target, args.opt_level, args.tuner, args.tuning_records,

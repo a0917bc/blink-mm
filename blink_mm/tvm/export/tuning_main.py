@@ -60,11 +60,13 @@ def tuning_main(
     if quantize_flag:
         mod = quantize(mod, params, False)
 
-    if tgt in ["x86", "x86_avx512"]:
+    if tgt in ["x86", "x86_avx512", "icelake"]:
         if tgt == "x86":
             target = "llvm -mcpu=core-avx2"
         elif tgt == "x86_avx512":
             target = "llvm -mcpu=skylake-avx512"
+        elif tgt == "icelake":
+            target = "llvm -mcpu=icelake-client"
         if tuner == "autotvm":
             measure_option = autotvm.measure_option(
                 builder="local", runner="local"
@@ -111,7 +113,7 @@ def tuning_main(
     if tuner == "autotvm":
         tuning_option = {
             "n_trial": 1500,
-            "early_stopping": None,
+            "early_stopping": 800,
             "measure_option": measure_option,
             "tuning_records": tuning_records,
         }
@@ -150,7 +152,7 @@ if __name__ == "__main__":
                         choices=["autotvm", "auto_scheduler", "meta_schedule"])
     parser.add_argument("--quantize", action="store_true")
     parser.add_argument("--target", default="x86_avx512",
-                        choices=["x86", "x86_avx512", "arm"])
+                        choices=["x86", "x86_avx512", "arm", "icelake"])
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=9190, type=int)
     parser.add_argument("--key", default="m1")

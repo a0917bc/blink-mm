@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 from tvm import autotvm, relay, auto_scheduler, meta_schedule
-
+import os
 
 def quantize(mod, params, data_aware, **kwargs):
     qconfig_kwargs = {
@@ -19,18 +19,32 @@ def quantize(mod, params, data_aware, **kwargs):
         with relay.quantize.qconfig(calibrate_mode="global_scale", global_scale=8.0, **qconfig_kwargs):
             mod = relay.quantize.quantize(mod, params)
     return mod
-
+def prune_old_tasks(tasks, log_file):
+    if os.path.isfile(log_file):
+        new_tasks = []
+        
+        # history = autotvm.record.ApplyHistoryBest(log_file)
+        history = autotvm.apply_history_best(log_file)
+        for task in tasks:
+            if history._query_inside(task.target, task.workload) is None:
+                new_tasks.append(task)
+        return new_tasks
+    else:
+        return tasks
 
 def tune_network(mod, params, target, tuning_option):
     from tvm.autotvm.tuner import XGBTuner
-
+    # print(mod)
+    # exit()
     tasks = autotvm.task.extract_from_program(
         mod["main"], target=target, params=params)
-    # print(mod["main"])
-    # exit()
+    
+    tasks = prune_old_tasks(tasks=tasks, log_file="/Users/trivenTriven/demo/blink-mm/1107_vit.json")
+    # tasks = prune_old_tasks(tasks=tasks, log_file="/Users/trivenTriven/demo/blink-mm/1112_amm_vit.json")
     for i, task in enumerate(tasks):
         prefix = "[Task %2d/%2d: %s] " % (i + 1, len(tasks), task.name) # Just task.name for x86?
         tuner = XGBTuner(task, loss_type="rank", feature_type="curve")
+        # tuner.load_history(autotvm.record.load_from_file("/Users/trivenTriven/demo/blink-mm/1112_amm_vit.json")) # transfer from original model... # 那好像其實沒寫錯。。。
         tuner.tune(
             n_trial=min(tuning_option["n_trial"], len(task.config_space)),
             early_stopping=tuning_option["early_stopping"],
